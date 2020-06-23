@@ -81,6 +81,7 @@ import           Cardano.Config.Protocol (TraceConstraints)
 import           Cardano.Config.TraceConfig
 import           Cardano.Config.Types (HasKESMetricsData (..), KESMetricsData (..),
                                        MaxKESEvolutions (..), OperationalCertStartKESPeriod (..))
+import           Cardano.Tracing.Kernel
 import           Cardano.Tracing.MicroBenchmarking
 
 import           Control.Tracer.Transformers
