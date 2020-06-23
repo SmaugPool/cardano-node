@@ -1,10 +1,7 @@
-{-# LANGUAGE BlockArguments        #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DeriveTraversable     #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE OverloadedStrings     #-}
 
 module Cardano.Tracing.Kernel
   ( NodeKernelData (..)
@@ -41,7 +38,9 @@ fromSMaybe _ (SJust x) = x
 
 
 newtype NodeKernelData blk =
-  NodeKernelData (IORef (SMaybe (NodeKernel IO RemoteConnectionId LocalConnectionId blk)))
+  NodeKernelData
+  { unNodeKernelData :: IORef (SMaybe (NodeKernel IO RemoteConnectionId LocalConnectionId blk))
+  }
 
 mkNodeKernelData :: IO (NodeKernelData blk)
 mkNodeKernelData = NodeKernelData <$> newIORef SNothing
@@ -57,4 +56,4 @@ mapNodeKernelDataIO ::
   -> NodeKernelData blk
   -> IO (SMaybe a)
 mapNodeKernelDataIO f (NodeKernelData ref) =
-  join $ sequence . fmap f <$> readIORef ref
+  readIORef ref >>= traverse f

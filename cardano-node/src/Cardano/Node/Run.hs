@@ -1,8 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE NamedFieldPuns #-}
@@ -125,8 +122,6 @@ runNode loggingLayer npm@NodeCLI{protocolFiles} = do
 
     bcCounters :: IORef BlockchainCounters <- newIORef initialBlockchainCounters
 
-    tracers <- mkTracers (ncTraceConfig nc) trace bcCounters
-
 #ifdef UNIX
     let viewmode = ncViewMode nc
 #else
@@ -137,7 +132,9 @@ runNode loggingLayer npm@NodeCLI{protocolFiles} = do
 
     -- This IORef contains node kernel structure which holds node kernel.
     -- We use it to extract an actual information about connected peers periodically.
-    nodeKernelData :: IORef (NodeKernelData blk) <- newIORef initialNodeKernelData
+    nodeKernelData :: NodeKernelData blk <- mkNodeKernelData
+
+    tracers <- mkTracers (ncTraceConfig nc) trace nodeKernelData bcCounters
 
     case viewmode of
       SimpleView -> do
