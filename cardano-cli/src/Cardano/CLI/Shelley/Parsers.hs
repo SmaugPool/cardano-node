@@ -15,6 +15,7 @@ import           Prelude (String)
 import           Cardano.Prelude hiding (option)
 
 import           Control.Monad.Fail (fail)
+import           Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.Char as Char
@@ -509,6 +510,7 @@ pNodeCmd =
       NodeKeyGenCold <$> pColdVerificationKeyFile
                      <*> pColdSigningKeyFile
                      <*> pOperatorCertIssueCounterFile
+                     <*> pVanityPoolIdPrefix
 
     pKeyGenKES :: Parser NodeCmd
     pKeyGenKES =
@@ -1109,6 +1111,15 @@ pOperatorCertIssueCounterFile =
         <> Opt.internal
         )
     )
+
+pVanityPoolIdPrefix :: Parser ByteString
+pVanityPoolIdPrefix =
+  Text.encodeUtf8 <$>
+    Opt.strOption
+      (  Opt.long "vanity"
+      <> Opt.metavar "STRING"
+      <> Opt.help "The pool identifier vanity prefix."
+      )
 
 
 pMaybeOutputFile :: Parser (Maybe OutputFile)

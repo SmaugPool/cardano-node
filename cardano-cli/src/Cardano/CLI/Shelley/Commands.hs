@@ -47,6 +47,7 @@ module Cardano.CLI.Shelley.Commands
   ) where
 
 import           Prelude
+import           Data.ByteString (ByteString)
 import           Data.Set (Set)
 import           Data.Text (Text)
 
@@ -139,7 +140,7 @@ data TransactionCmd
 
 
 data NodeCmd
-  = NodeKeyGenCold VerificationKeyFile SigningKeyFile OpCertCounterFile
+  = NodeKeyGenCold VerificationKeyFile SigningKeyFile OpCertCounterFile ByteString
   | NodeKeyGenKES  VerificationKeyFile SigningKeyFile
   | NodeKeyGenVRF  VerificationKeyFile SigningKeyFile
   | NodeKeyHashVRF  VerificationKeyFile (Maybe OutputFile)

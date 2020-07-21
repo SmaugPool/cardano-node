@@ -39,7 +39,7 @@ renderShelleyNodeCmdError err =
 
 
 runNodeCmd :: NodeCmd -> ExceptT ShelleyNodeCmdError IO ()
-runNodeCmd (NodeKeyGenCold vk sk ctr) = runNodeKeyGenCold vk sk ctr
+runNodeCmd (NodeKeyGenCold vk sk ctr vanity) = runNodeKeyGenCold vk sk ctr vanity
 runNodeCmd (NodeKeyGenKES  vk sk)     = runNodeKeyGenKES  vk sk
 runNodeCmd (NodeKeyGenVRF  vk sk)     = runNodeKeyGenVRF  vk sk
 runNodeCmd (NodeKeyHashVRF vk mOutFp) = runNodeKeyHashVRF vk mOutFp
@@ -56,21 +56,32 @@ runNodeCmd (NodeIssueOpCert vk sk ctr p out) =
 runNodeKeyGenCold :: VerificationKeyFile
                   -> SigningKeyFile
                   -> OpCertCounterFile
+                  -> ByteString
                   -> ExceptT ShelleyNodeCmdError IO ()
 runNodeKeyGenCold (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath)
-                  (OpCertCounterFile ocertCtrPath) = do
+                  (OpCertCounterFile ocertCtrPath) vanity = do
     skey <- liftIO $ generateSigningKey AsStakePoolKey
     let vkey = getVerificationKey skey
-    firstExceptT ShelleyNodeWriteFileError
-      . newExceptT
-      $ writeFileTextEnvelope skeyPath (Just skeyDesc) skey
-    firstExceptT ShelleyNodeWriteFileError
-      . newExceptT
-      $ writeFileTextEnvelope vkeyPath (Just vkeyDesc) vkey
-    firstExceptT ShelleyNodeWriteFileError
-      . newExceptT
-      $ writeFileTextEnvelope ocertCtrPath (Just ocertCtrDesc)
-      $ OperationalCertificateIssueCounter initialCounter vkey
+    let poolId = serialiseToRawBytesHex (verificationKeyHash vkey)
+    case BS.isPrefixOf vanity poolId of
+      True -> do
+        liftIO $ BS.putStrLn $ poolId
+        firstExceptT ShelleyNodeWriteFileError
+          . newExceptT
+          $ writeFileTextEnvelope skeyPath (Just skeyDesc) skey
+        firstExceptT ShelleyNodeWriteFileError
+          . newExceptT
+          $ writeFileTextEnvelope vkeyPath (Just vkeyDesc) vkey
+        firstExceptT ShelleyNodeWriteFileError
+          . newExceptT
+          $ writeFileTextEnvelope ocertCtrPath (Just ocertCtrDesc)
+          $ OperationalCertificateIssueCounter initialCounter vkey
+      False ->
+        runNodeKeyGenCold 
+            (VerificationKeyFile vkeyPath)
+            (SigningKeyFile skeyPath)
+            (OpCertCounterFile ocertCtrPath)
+            vanity
   where
     skeyDesc, vkeyDesc, ocertCtrDesc :: TextViewDescription
     skeyDesc = TextViewDescription "Stake Pool Operator Signing Key"
